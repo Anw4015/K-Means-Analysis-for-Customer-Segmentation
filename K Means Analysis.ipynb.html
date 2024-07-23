@@ -1,0 +1,263 @@
+<html>
+<head>
+<title>K Means Analysis.ipynb</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #7a7e85;}
+.s1 { color: #bcbec4;}
+.s2 { color: #cf8e6d;}
+.s3 { color: #bcbec4;}
+.s4 { color: #6aab73;}
+.s5 { color: #2aacb8;}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+K Means Analysis.ipynb</font>
+</center></td></tr></table>
+<pre><span class="s0">#%% md 
+</span><span class="s1"># Customer Segmentation and Analysis  
+</span><span class="s0">#%% md 
+</span><span class="s1">## Importing Libraries 
+</span><span class="s0">#%% 
+</span><span class="s2">import </span><span class="s1">numpy </span><span class="s2">as </span><span class="s1">np </span><span class="s0"># linear algebra</span>
+<span class="s2">import </span><span class="s1">pandas </span><span class="s2">as </span><span class="s1">pd </span><span class="s0"># data processing, CSV file I/O (e.g. pd.read_csv)</span>
+<span class="s2">import </span><span class="s1">matplotlib</span><span class="s3">.</span><span class="s1">pyplot </span><span class="s2">as </span><span class="s1">plt </span>
+<span class="s2">import </span><span class="s1">seaborn </span><span class="s2">as </span><span class="s1">sns </span>
+<span class="s2">import </span><span class="s1">plotly </span><span class="s2">as </span><span class="s1">py</span>
+<span class="s2">import </span><span class="s1">plotly</span><span class="s3">.</span><span class="s1">graph_objs </span><span class="s2">as </span><span class="s1">go</span>
+<span class="s2">from </span><span class="s1">sklearn</span><span class="s3">.</span><span class="s1">cluster </span><span class="s2">import </span><span class="s1">KMeans</span>
+<span class="s2">import </span><span class="s1">warnings</span>
+<span class="s2">import </span><span class="s1">os</span>
+<span class="s1">warnings</span><span class="s3">.</span><span class="s1">filterwarnings</span><span class="s3">(</span><span class="s4">&quot;ignore&quot;</span><span class="s3">)</span>
+<span class="s1">py</span><span class="s3">.</span><span class="s1">offline</span><span class="s3">.</span><span class="s1">init_notebook_mode</span><span class="s3">(</span><span class="s1">connected </span><span class="s3">= </span><span class="s2">True</span><span class="s3">)</span>
+<span class="s0">#%% md 
+</span><span class="s1">## Data Exploration 
+</span><span class="s0">#%% 
+</span><span class="s1">df </span><span class="s3">= </span><span class="s1">pd</span><span class="s3">.</span><span class="s1">read_csv</span><span class="s3">(</span><span class="s4">r'/Users/una/Desktop/K-means/Mall_Customers.csv'</span><span class="s3">)</span>
+<span class="s1">df</span><span class="s3">.</span><span class="s1">head</span><span class="s3">()</span>
+<span class="s0">#%% 
+</span><span class="s1">df</span><span class="s3">.</span><span class="s1">describe</span><span class="s3">()</span>
+<span class="s0">#%% md 
+</span><span class="s1">## Data Visualization¶ 
+ 
+### Histograms¶ 
+</span><span class="s0">#%% 
+</span><span class="s1">plt</span><span class="s3">.</span><span class="s1">figure</span><span class="s3">(</span><span class="s5">1</span><span class="s3">, </span><span class="s1">figsize </span><span class="s3">= (</span><span class="s5">18</span><span class="s3">, </span><span class="s5">8</span><span class="s3">))</span>
+<span class="s1">n </span><span class="s3">= </span><span class="s5">0 </span>
+<span class="s2">for </span><span class="s1">x </span><span class="s2">in </span><span class="s3">[</span><span class="s4">'Age'</span><span class="s3">, </span><span class="s4">'Annual Income (k$)'</span><span class="s3">, </span><span class="s4">'Spending Score (1-100)'</span><span class="s3">]:</span>
+    <span class="s1">n </span><span class="s3">+= </span><span class="s5">1</span>
+    <span class="s1">plt</span><span class="s3">.</span><span class="s1">subplot</span><span class="s3">(</span><span class="s5">1 </span><span class="s3">, </span><span class="s5">3 </span><span class="s3">, </span><span class="s1">n</span><span class="s3">)</span>
+    <span class="s1">plt</span><span class="s3">.</span><span class="s1">subplots_adjust</span><span class="s3">(</span><span class="s1">hspace </span><span class="s3">=</span><span class="s5">0.5 </span><span class="s3">, </span><span class="s1">wspace </span><span class="s3">= </span><span class="s5">0.5</span><span class="s3">)</span>
+    <span class="s1">sns</span><span class="s3">.</span><span class="s1">distplot</span><span class="s3">(</span><span class="s1">df</span><span class="s3">[</span><span class="s1">x</span><span class="s3">] , </span><span class="s1">bins </span><span class="s3">= </span><span class="s5">20</span><span class="s3">)</span>
+    <span class="s1">plt</span><span class="s3">.</span><span class="s1">title</span><span class="s3">(</span><span class="s4">'Distplot of {}'</span><span class="s3">.</span><span class="s1">format</span><span class="s3">(</span><span class="s1">x</span><span class="s3">))</span>
+<span class="s1">plt</span><span class="s3">.</span><span class="s1">show</span><span class="s3">()</span>
+<span class="s0">#%% md 
+</span><span class="s1">## Count Plot of Gender¶ 
+</span><span class="s0">#%% 
+</span><span class="s1">plt</span><span class="s3">.</span><span class="s1">figure</span><span class="s3">(</span><span class="s5">1</span><span class="s3">, </span><span class="s1">figsize </span><span class="s3">= (</span><span class="s5">15</span><span class="s3">, </span><span class="s5">5</span><span class="s3">))</span>
+<span class="s1">sns</span><span class="s3">.</span><span class="s1">countplot</span><span class="s3">(</span><span class="s1">y </span><span class="s3">= </span><span class="s4">'Gender' </span><span class="s3">, </span><span class="s1">data </span><span class="s3">= </span><span class="s1">df</span><span class="s3">) </span>
+<span class="s0"># Calculate the count of occurrences for each category in the data and display these counts as a bar chart.</span>
+<span class="s1">plt</span><span class="s3">.</span><span class="s1">show</span><span class="s3">()</span>
+<span class="s0">#%% md 
+</span><span class="s1"># Ploting the Relation between Age , Annual Income and Spending Score 
+</span><span class="s0">#%% 
+</span><span class="s1">plt</span><span class="s3">.</span><span class="s1">figure</span><span class="s3">(</span><span class="s5">1 </span><span class="s3">, </span><span class="s1">figsize </span><span class="s3">= (</span><span class="s5">15 </span><span class="s3">, </span><span class="s5">8</span><span class="s3">))</span>
+<span class="s1">n </span><span class="s3">= </span><span class="s5">0 </span>
+<span class="s2">for </span><span class="s1">x </span><span class="s2">in </span><span class="s3">[</span><span class="s4">'Age' </span><span class="s3">, </span><span class="s4">'Annual Income (k$)' </span><span class="s3">, </span><span class="s4">'Spending Score (1-100)'</span><span class="s3">]:</span>
+    <span class="s2">for </span><span class="s1">y </span><span class="s2">in </span><span class="s3">[</span><span class="s4">'Age' </span><span class="s3">, </span><span class="s4">'Annual Income (k$)' </span><span class="s3">, </span><span class="s4">'Spending Score (1-100)'</span><span class="s3">]:</span>
+        <span class="s1">n </span><span class="s3">+= </span><span class="s5">1</span>
+        <span class="s1">plt</span><span class="s3">.</span><span class="s1">subplot</span><span class="s3">(</span><span class="s5">3 </span><span class="s3">, </span><span class="s5">3 </span><span class="s3">, </span><span class="s1">n</span><span class="s3">)</span>
+        <span class="s1">plt</span><span class="s3">.</span><span class="s1">subplots_adjust</span><span class="s3">(</span><span class="s1">hspace </span><span class="s3">= </span><span class="s5">0.5 </span><span class="s3">, </span><span class="s1">wspace </span><span class="s3">= </span><span class="s5">0.5</span><span class="s3">)</span>
+        <span class="s1">sns</span><span class="s3">.</span><span class="s1">regplot</span><span class="s3">(</span><span class="s1">x </span><span class="s3">= </span><span class="s1">x </span><span class="s3">, </span><span class="s1">y </span><span class="s3">= </span><span class="s1">y </span><span class="s3">, </span><span class="s1">data </span><span class="s3">= </span><span class="s1">df</span><span class="s3">)</span>
+        <span class="s1">plt</span><span class="s3">.</span><span class="s1">ylabel</span><span class="s3">(</span><span class="s1">y</span><span class="s3">.</span><span class="s1">split</span><span class="s3">()[</span><span class="s5">0</span><span class="s3">]+</span><span class="s4">' '</span><span class="s3">+</span><span class="s1">y</span><span class="s3">.</span><span class="s1">split</span><span class="s3">()[</span><span class="s5">1</span><span class="s3">] </span><span class="s2">if </span><span class="s1">len</span><span class="s3">(</span><span class="s1">y</span><span class="s3">.</span><span class="s1">split</span><span class="s3">()) &gt; </span><span class="s5">1 </span><span class="s2">else </span><span class="s1">y </span><span class="s3">)</span>
+        
+<span class="s1">plt</span><span class="s3">.</span><span class="s1">show</span><span class="s3">()</span>
+<span class="s0">#%% md 
+</span><span class="s1">These plots suggest that in this dataset, the variables Age, Annual Income, and Spending Score do not have strong linear relationships 
+</span><span class="s0">#%% md 
+</span><span class="s1">## Age vs Annual Income w.r.t Gender 
+</span><span class="s0">#%% 
+</span><span class="s1">plt</span><span class="s3">.</span><span class="s1">figure</span><span class="s3">(</span><span class="s5">1</span><span class="s3">, </span><span class="s1">figsize </span><span class="s3">= (</span><span class="s5">15</span><span class="s3">, </span><span class="s5">6</span><span class="s3">))</span>
+<span class="s2">for </span><span class="s1">gender </span><span class="s2">in </span><span class="s3">[</span><span class="s4">'Male' </span><span class="s3">, </span><span class="s4">'Female'</span><span class="s3">]:</span>
+    <span class="s1">plt</span><span class="s3">.</span><span class="s1">scatter</span><span class="s3">(</span><span class="s1">x </span><span class="s3">= </span><span class="s4">'Age' </span><span class="s3">, </span><span class="s1">y </span><span class="s3">= </span><span class="s4">'Annual Income (k$)' </span><span class="s3">, </span><span class="s1">data </span><span class="s3">= </span><span class="s1">df</span><span class="s3">[</span><span class="s1">df</span><span class="s3">[</span><span class="s4">'Gender'</span><span class="s3">] == </span><span class="s1">gender</span><span class="s3">] ,</span>
+                <span class="s1">s </span><span class="s3">= </span><span class="s5">200 </span><span class="s3">, </span><span class="s1">alpha </span><span class="s3">= </span><span class="s5">0.5 </span><span class="s3">, </span><span class="s1">label </span><span class="s3">= </span><span class="s1">gender</span><span class="s3">)</span>
+<span class="s1">plt</span><span class="s3">.</span><span class="s1">xlabel</span><span class="s3">(</span><span class="s4">'Age'</span><span class="s3">), </span><span class="s1">plt</span><span class="s3">.</span><span class="s1">ylabel</span><span class="s3">(</span><span class="s4">'Annual Income (k$)'</span><span class="s3">) </span>
+<span class="s1">plt</span><span class="s3">.</span><span class="s1">title</span><span class="s3">(</span><span class="s4">'Age vs Annual Income w.r.t Gender'</span><span class="s3">)</span>
+<span class="s1">plt</span><span class="s3">.</span><span class="s1">legend</span><span class="s3">()</span>
+<span class="s1">plt</span><span class="s3">.</span><span class="s1">show</span><span class="s3">()</span>
+<span class="s0">#%% md 
+</span><span class="s1">## Annual Income vs Spending Score w.r.t Gender 
+</span><span class="s0">#%% 
+</span><span class="s1">plt</span><span class="s3">.</span><span class="s1">figure</span><span class="s3">(</span><span class="s5">1 </span><span class="s3">, </span><span class="s1">figsize </span><span class="s3">= (</span><span class="s5">15 </span><span class="s3">, </span><span class="s5">6</span><span class="s3">))</span>
+<span class="s2">for </span><span class="s1">gender </span><span class="s2">in </span><span class="s3">[</span><span class="s4">'Male' </span><span class="s3">, </span><span class="s4">'Female'</span><span class="s3">]:</span>
+    <span class="s1">plt</span><span class="s3">.</span><span class="s1">scatter</span><span class="s3">(</span><span class="s1">x </span><span class="s3">= </span><span class="s4">'Annual Income (k$)'</span><span class="s3">,</span><span class="s1">y </span><span class="s3">= </span><span class="s4">'Spending Score (1-100)' </span><span class="s3">,</span>
+                <span class="s1">data </span><span class="s3">= </span><span class="s1">df</span><span class="s3">[</span><span class="s1">df</span><span class="s3">[</span><span class="s4">'Gender'</span><span class="s3">] == </span><span class="s1">gender</span><span class="s3">] ,</span><span class="s1">s </span><span class="s3">= </span><span class="s5">200 </span><span class="s3">, </span><span class="s1">alpha </span><span class="s3">= </span><span class="s5">0.5 </span><span class="s3">, </span><span class="s1">label </span><span class="s3">= </span><span class="s1">gender</span><span class="s3">)</span>
+<span class="s1">plt</span><span class="s3">.</span><span class="s1">xlabel</span><span class="s3">(</span><span class="s4">'Annual Income (k$)'</span><span class="s3">), </span><span class="s1">plt</span><span class="s3">.</span><span class="s1">ylabel</span><span class="s3">(</span><span class="s4">'Spending Score (1-100)'</span><span class="s3">) </span>
+<span class="s1">plt</span><span class="s3">.</span><span class="s1">title</span><span class="s3">(</span><span class="s4">'Annual Income vs Spending Score w.r.t Gender'</span><span class="s3">)</span>
+<span class="s1">plt</span><span class="s3">.</span><span class="s1">legend</span><span class="s3">()</span>
+<span class="s1">plt</span><span class="s3">.</span><span class="s1">show</span><span class="s3">()</span>
+<span class="s0">#%% md 
+</span><span class="s1">## Distribution of values in Age , Annual Income and Spending Score according to Gender¶ 
+</span><span class="s0">#%% 
+</span><span class="s1">plt</span><span class="s3">.</span><span class="s1">figure</span><span class="s3">(</span><span class="s5">1 </span><span class="s3">, </span><span class="s1">figsize </span><span class="s3">= (</span><span class="s5">15 </span><span class="s3">, </span><span class="s5">7</span><span class="s3">))</span>
+<span class="s1">n </span><span class="s3">= </span><span class="s5">0 </span>
+<span class="s2">for </span><span class="s1">cols </span><span class="s2">in </span><span class="s3">[</span><span class="s4">'Age' </span><span class="s3">, </span><span class="s4">'Annual Income (k$)' </span><span class="s3">, </span><span class="s4">'Spending Score (1-100)'</span><span class="s3">]:</span>
+    <span class="s1">n </span><span class="s3">+= </span><span class="s5">1 </span>
+    <span class="s1">plt</span><span class="s3">.</span><span class="s1">subplot</span><span class="s3">(</span><span class="s5">1 </span><span class="s3">, </span><span class="s5">3 </span><span class="s3">, </span><span class="s1">n</span><span class="s3">)</span>
+    <span class="s1">plt</span><span class="s3">.</span><span class="s1">subplots_adjust</span><span class="s3">(</span><span class="s1">hspace </span><span class="s3">= </span><span class="s5">0.5 </span><span class="s3">, </span><span class="s1">wspace </span><span class="s3">= </span><span class="s5">0.5</span><span class="s3">)</span>
+    <span class="s1">sns</span><span class="s3">.</span><span class="s1">violinplot</span><span class="s3">(</span><span class="s1">x </span><span class="s3">= </span><span class="s1">cols </span><span class="s3">, </span><span class="s1">y </span><span class="s3">= </span><span class="s4">'Gender' </span><span class="s3">, </span><span class="s1">data </span><span class="s3">= </span><span class="s1">df </span><span class="s3">, </span><span class="s1">palette </span><span class="s3">= </span><span class="s4">'vlag'</span><span class="s3">)</span>
+    <span class="s1">sns</span><span class="s3">.</span><span class="s1">swarmplot</span><span class="s3">(</span><span class="s1">x </span><span class="s3">= </span><span class="s1">cols </span><span class="s3">, </span><span class="s1">y </span><span class="s3">= </span><span class="s4">'Gender' </span><span class="s3">, </span><span class="s1">data </span><span class="s3">= </span><span class="s1">df</span><span class="s3">)</span>
+    <span class="s1">plt</span><span class="s3">.</span><span class="s1">ylabel</span><span class="s3">(</span><span class="s4">'Gender' </span><span class="s2">if </span><span class="s1">n </span><span class="s3">== </span><span class="s5">1 </span><span class="s2">else </span><span class="s4">''</span><span class="s3">)</span>
+    <span class="s1">plt</span><span class="s3">.</span><span class="s1">title</span><span class="s3">(</span><span class="s4">'Boxplots &amp; Swarmplots' </span><span class="s2">if </span><span class="s1">n </span><span class="s3">== </span><span class="s5">2 </span><span class="s2">else </span><span class="s4">''</span><span class="s3">)</span>
+<span class="s1">plt</span><span class="s3">.</span><span class="s1">show</span><span class="s3">()</span>
+<span class="s0">#%% md 
+</span><span class="s1"># Clustering using K- means 
+ 
+### 1. Segmentation using Age and Spending Score¶ 
+</span><span class="s0">#%% 
+</span><span class="s4">'''Age and spending Score'''</span>
+<span class="s1">X1 </span><span class="s3">= </span><span class="s1">df</span><span class="s3">[[</span><span class="s4">'Age' </span><span class="s3">, </span><span class="s4">'Spending Score (1-100)'</span><span class="s3">]].</span><span class="s1">iloc</span><span class="s3">[: , :].</span><span class="s1">values</span>
+<span class="s1">inertia </span><span class="s3">= []</span>
+<span class="s2">for </span><span class="s1">n </span><span class="s2">in </span><span class="s1">range</span><span class="s3">(</span><span class="s5">1 </span><span class="s3">, </span><span class="s5">11</span><span class="s3">):</span>
+    <span class="s1">algorithm </span><span class="s3">= (</span><span class="s1">KMeans</span><span class="s3">(</span><span class="s1">n_clusters </span><span class="s3">= </span><span class="s1">n </span><span class="s3">,</span><span class="s1">init</span><span class="s3">=</span><span class="s4">'k-means++'</span><span class="s3">, </span><span class="s1">n_init </span><span class="s3">= </span><span class="s5">10 </span><span class="s3">,</span><span class="s1">max_iter</span><span class="s3">=</span><span class="s5">300</span><span class="s3">, </span>
+                        <span class="s1">tol</span><span class="s3">=</span><span class="s5">0.0001</span><span class="s3">,  </span><span class="s1">random_state</span><span class="s3">= </span><span class="s5">111  </span><span class="s3">, </span><span class="s1">algorithm</span><span class="s3">=</span><span class="s4">'elkan'</span><span class="s3">) )</span>
+    <span class="s1">algorithm</span><span class="s3">.</span><span class="s1">fit</span><span class="s3">(</span><span class="s1">X1</span><span class="s3">)</span>
+    <span class="s1">inertia</span><span class="s3">.</span><span class="s1">append</span><span class="s3">(</span><span class="s1">algorithm</span><span class="s3">.</span><span class="s1">inertia_</span><span class="s3">)</span>
+<span class="s0">#%% md 
+</span><span class="s1">### Selecting N Clusters based in Inertia (Squared Distance between Centroids and data points, should be less) 
+</span><span class="s0">#%% 
+</span><span class="s1">plt</span><span class="s3">.</span><span class="s1">figure</span><span class="s3">(</span><span class="s5">1 </span><span class="s3">, </span><span class="s1">figsize </span><span class="s3">= (</span><span class="s5">15 </span><span class="s3">,</span><span class="s5">6</span><span class="s3">))</span>
+<span class="s1">plt</span><span class="s3">.</span><span class="s1">plot</span><span class="s3">(</span><span class="s1">np</span><span class="s3">.</span><span class="s1">arange</span><span class="s3">(</span><span class="s5">1 </span><span class="s3">, </span><span class="s5">11</span><span class="s3">) , </span><span class="s1">inertia </span><span class="s3">, </span><span class="s4">'o'</span><span class="s3">)</span>
+<span class="s1">plt</span><span class="s3">.</span><span class="s1">plot</span><span class="s3">(</span><span class="s1">np</span><span class="s3">.</span><span class="s1">arange</span><span class="s3">(</span><span class="s5">1 </span><span class="s3">, </span><span class="s5">11</span><span class="s3">) , </span><span class="s1">inertia </span><span class="s3">, </span><span class="s4">'-' </span><span class="s3">, </span><span class="s1">alpha </span><span class="s3">= </span><span class="s5">0.5</span><span class="s3">)</span>
+<span class="s1">plt</span><span class="s3">.</span><span class="s1">xlabel</span><span class="s3">(</span><span class="s4">'Number of Clusters'</span><span class="s3">) , </span><span class="s1">plt</span><span class="s3">.</span><span class="s1">ylabel</span><span class="s3">(</span><span class="s4">'Inertia'</span><span class="s3">)</span>
+<span class="s1">plt</span><span class="s3">.</span><span class="s1">show</span><span class="s3">()</span>
+<span class="s0">#%% 
+</span><span class="s1">algorithm </span><span class="s3">= (</span><span class="s1">KMeans</span><span class="s3">(</span><span class="s1">n_clusters </span><span class="s3">= </span><span class="s5">4 </span><span class="s3">,</span><span class="s1">init</span><span class="s3">=</span><span class="s4">'k-means++'</span><span class="s3">, </span><span class="s1">n_init </span><span class="s3">= </span><span class="s5">10 </span><span class="s3">,</span><span class="s1">max_iter</span><span class="s3">=</span><span class="s5">300</span><span class="s3">, </span>
+                        <span class="s1">tol</span><span class="s3">=</span><span class="s5">0.0001</span><span class="s3">,  </span><span class="s1">random_state</span><span class="s3">= </span><span class="s5">111  </span><span class="s3">, </span><span class="s1">algorithm</span><span class="s3">=</span><span class="s4">'elkan'</span><span class="s3">) )</span>
+<span class="s1">algorithm</span><span class="s3">.</span><span class="s1">fit</span><span class="s3">(</span><span class="s1">X1</span><span class="s3">)</span>
+<span class="s1">labels1 </span><span class="s3">= </span><span class="s1">algorithm</span><span class="s3">.</span><span class="s1">labels_</span>
+<span class="s1">centroids1 </span><span class="s3">= </span><span class="s1">algorithm</span><span class="s3">.</span><span class="s1">cluster_centers_</span>
+<span class="s0">#%% 
+</span><span class="s1">h </span><span class="s3">= </span><span class="s5">0.02</span>
+<span class="s1">x_min</span><span class="s3">, </span><span class="s1">x_max </span><span class="s3">= </span><span class="s1">X1</span><span class="s3">[:, </span><span class="s5">0</span><span class="s3">].</span><span class="s1">min</span><span class="s3">() - </span><span class="s5">1</span><span class="s3">, </span><span class="s1">X1</span><span class="s3">[:, </span><span class="s5">0</span><span class="s3">].</span><span class="s1">max</span><span class="s3">() + </span><span class="s5">1</span>
+<span class="s1">y_min</span><span class="s3">, </span><span class="s1">y_max </span><span class="s3">= </span><span class="s1">X1</span><span class="s3">[:, </span><span class="s5">1</span><span class="s3">].</span><span class="s1">min</span><span class="s3">() - </span><span class="s5">1</span><span class="s3">, </span><span class="s1">X1</span><span class="s3">[:, </span><span class="s5">1</span><span class="s3">].</span><span class="s1">max</span><span class="s3">() + </span><span class="s5">1</span>
+<span class="s1">xx</span><span class="s3">, </span><span class="s1">yy </span><span class="s3">= </span><span class="s1">np</span><span class="s3">.</span><span class="s1">meshgrid</span><span class="s3">(</span><span class="s1">np</span><span class="s3">.</span><span class="s1">arange</span><span class="s3">(</span><span class="s1">x_min</span><span class="s3">, </span><span class="s1">x_max</span><span class="s3">, </span><span class="s1">h</span><span class="s3">), </span><span class="s1">np</span><span class="s3">.</span><span class="s1">arange</span><span class="s3">(</span><span class="s1">y_min</span><span class="s3">, </span><span class="s1">y_max</span><span class="s3">, </span><span class="s1">h</span><span class="s3">))</span>
+<span class="s1">Z </span><span class="s3">= </span><span class="s1">algorithm</span><span class="s3">.</span><span class="s1">predict</span><span class="s3">(</span><span class="s1">np</span><span class="s3">.</span><span class="s1">c_</span><span class="s3">[</span><span class="s1">xx</span><span class="s3">.</span><span class="s1">ravel</span><span class="s3">(), </span><span class="s1">yy</span><span class="s3">.</span><span class="s1">ravel</span><span class="s3">()]) </span>
+<span class="s0">#%% 
+</span><span class="s1">plt</span><span class="s3">.</span><span class="s1">figure</span><span class="s3">(</span><span class="s5">1 </span><span class="s3">, </span><span class="s1">figsize </span><span class="s3">= (</span><span class="s5">15 </span><span class="s3">, </span><span class="s5">7</span><span class="s3">) )</span>
+<span class="s1">plt</span><span class="s3">.</span><span class="s1">clf</span><span class="s3">()</span>
+<span class="s1">Z </span><span class="s3">= </span><span class="s1">Z</span><span class="s3">.</span><span class="s1">reshape</span><span class="s3">(</span><span class="s1">xx</span><span class="s3">.</span><span class="s1">shape</span><span class="s3">)</span>
+<span class="s1">plt</span><span class="s3">.</span><span class="s1">imshow</span><span class="s3">(</span><span class="s1">Z </span><span class="s3">, </span><span class="s1">interpolation</span><span class="s3">=</span><span class="s4">'nearest'</span><span class="s3">, </span>
+           <span class="s1">extent</span><span class="s3">=(</span><span class="s1">xx</span><span class="s3">.</span><span class="s1">min</span><span class="s3">(), </span><span class="s1">xx</span><span class="s3">.</span><span class="s1">max</span><span class="s3">(), </span><span class="s1">yy</span><span class="s3">.</span><span class="s1">min</span><span class="s3">(), </span><span class="s1">yy</span><span class="s3">.</span><span class="s1">max</span><span class="s3">()),</span>
+           <span class="s1">cmap </span><span class="s3">= </span><span class="s1">plt</span><span class="s3">.</span><span class="s1">cm</span><span class="s3">.</span><span class="s1">Pastel2</span><span class="s3">, </span><span class="s1">aspect </span><span class="s3">= </span><span class="s4">'auto'</span><span class="s3">, </span><span class="s1">origin</span><span class="s3">=</span><span class="s4">'lower'</span><span class="s3">)</span>
+
+<span class="s1">plt</span><span class="s3">.</span><span class="s1">scatter</span><span class="s3">( </span><span class="s1">x </span><span class="s3">= </span><span class="s4">'Age' </span><span class="s3">,</span><span class="s1">y </span><span class="s3">= </span><span class="s4">'Spending Score (1-100)' </span><span class="s3">, </span><span class="s1">data </span><span class="s3">= </span><span class="s1">df </span><span class="s3">, </span><span class="s1">c </span><span class="s3">= </span><span class="s1">labels1 </span><span class="s3">, </span>
+            <span class="s1">s </span><span class="s3">= </span><span class="s5">200 </span><span class="s3">)</span>
+<span class="s1">plt</span><span class="s3">.</span><span class="s1">scatter</span><span class="s3">(</span><span class="s1">x </span><span class="s3">= </span><span class="s1">centroids1</span><span class="s3">[: , </span><span class="s5">0</span><span class="s3">] , </span><span class="s1">y </span><span class="s3">=  </span><span class="s1">centroids1</span><span class="s3">[: , </span><span class="s5">1</span><span class="s3">] , </span><span class="s1">s </span><span class="s3">= </span><span class="s5">300 </span><span class="s3">, </span><span class="s1">c </span><span class="s3">= </span><span class="s4">'red' </span><span class="s3">, </span><span class="s1">alpha </span><span class="s3">= </span><span class="s5">0.5</span><span class="s3">)</span>
+<span class="s1">plt</span><span class="s3">.</span><span class="s1">ylabel</span><span class="s3">(</span><span class="s4">'Spending Score (1-100)'</span><span class="s3">) , </span><span class="s1">plt</span><span class="s3">.</span><span class="s1">xlabel</span><span class="s3">(</span><span class="s4">'Age'</span><span class="s3">)</span>
+<span class="s1">plt</span><span class="s3">.</span><span class="s1">show</span><span class="s3">()</span>
+<span class="s0">#%% md 
+</span><span class="s1">## 2. Segmentation using Annual Income and Spending Score 
+</span><span class="s0">#%% 
+</span><span class="s4">'''Annual Income and spending Score'''</span>
+<span class="s1">X2 </span><span class="s3">= </span><span class="s1">df</span><span class="s3">[[</span><span class="s4">'Annual Income (k$)' </span><span class="s3">, </span><span class="s4">'Spending Score (1-100)'</span><span class="s3">]].</span><span class="s1">iloc</span><span class="s3">[: , :].</span><span class="s1">values</span>
+<span class="s1">inertia </span><span class="s3">= []</span>
+<span class="s2">for </span><span class="s1">n </span><span class="s2">in </span><span class="s1">range</span><span class="s3">(</span><span class="s5">1 </span><span class="s3">, </span><span class="s5">11</span><span class="s3">):</span>
+    <span class="s1">algorithm </span><span class="s3">= (</span><span class="s1">KMeans</span><span class="s3">(</span><span class="s1">n_clusters </span><span class="s3">= </span><span class="s1">n </span><span class="s3">,</span><span class="s1">init</span><span class="s3">=</span><span class="s4">'k-means++'</span><span class="s3">, </span><span class="s1">n_init </span><span class="s3">= </span><span class="s5">10 </span><span class="s3">,</span><span class="s1">max_iter</span><span class="s3">=</span><span class="s5">300</span><span class="s3">, </span>
+                        <span class="s1">tol</span><span class="s3">=</span><span class="s5">0.0001</span><span class="s3">,  </span><span class="s1">random_state</span><span class="s3">= </span><span class="s5">111  </span><span class="s3">, </span><span class="s1">algorithm</span><span class="s3">=</span><span class="s4">'elkan'</span><span class="s3">) )</span>
+    <span class="s1">algorithm</span><span class="s3">.</span><span class="s1">fit</span><span class="s3">(</span><span class="s1">X2</span><span class="s3">)</span>
+    <span class="s1">inertia</span><span class="s3">.</span><span class="s1">append</span><span class="s3">(</span><span class="s1">algorithm</span><span class="s3">.</span><span class="s1">inertia_</span><span class="s3">)</span>
+<span class="s0">#%% 
+</span><span class="s1">plt</span><span class="s3">.</span><span class="s1">figure</span><span class="s3">(</span><span class="s5">1 </span><span class="s3">, </span><span class="s1">figsize </span><span class="s3">= (</span><span class="s5">15 </span><span class="s3">,</span><span class="s5">6</span><span class="s3">))</span>
+<span class="s1">plt</span><span class="s3">.</span><span class="s1">plot</span><span class="s3">(</span><span class="s1">np</span><span class="s3">.</span><span class="s1">arange</span><span class="s3">(</span><span class="s5">1 </span><span class="s3">, </span><span class="s5">11</span><span class="s3">) , </span><span class="s1">inertia </span><span class="s3">, </span><span class="s4">'o'</span><span class="s3">)</span>
+<span class="s1">plt</span><span class="s3">.</span><span class="s1">plot</span><span class="s3">(</span><span class="s1">np</span><span class="s3">.</span><span class="s1">arange</span><span class="s3">(</span><span class="s5">1 </span><span class="s3">, </span><span class="s5">11</span><span class="s3">) , </span><span class="s1">inertia </span><span class="s3">, </span><span class="s4">'-' </span><span class="s3">, </span><span class="s1">alpha </span><span class="s3">= </span><span class="s5">0.5</span><span class="s3">)</span>
+<span class="s1">plt</span><span class="s3">.</span><span class="s1">xlabel</span><span class="s3">(</span><span class="s4">'Number of Clusters'</span><span class="s3">) , </span><span class="s1">plt</span><span class="s3">.</span><span class="s1">ylabel</span><span class="s3">(</span><span class="s4">'Inertia'</span><span class="s3">)</span>
+<span class="s1">plt</span><span class="s3">.</span><span class="s1">show</span><span class="s3">()</span>
+<span class="s0">#%% 
+</span><span class="s1">algorithm </span><span class="s3">= (</span><span class="s1">KMeans</span><span class="s3">(</span><span class="s1">n_clusters </span><span class="s3">= </span><span class="s5">5 </span><span class="s3">,</span><span class="s1">init</span><span class="s3">=</span><span class="s4">'k-means++'</span><span class="s3">, </span><span class="s1">n_init </span><span class="s3">= </span><span class="s5">10 </span><span class="s3">,</span><span class="s1">max_iter</span><span class="s3">=</span><span class="s5">300</span><span class="s3">, </span>
+                        <span class="s1">tol</span><span class="s3">=</span><span class="s5">0.0001</span><span class="s3">,  </span><span class="s1">random_state</span><span class="s3">= </span><span class="s5">111  </span><span class="s3">, </span><span class="s1">algorithm</span><span class="s3">=</span><span class="s4">'elkan'</span><span class="s3">) )</span>
+<span class="s1">algorithm</span><span class="s3">.</span><span class="s1">fit</span><span class="s3">(</span><span class="s1">X2</span><span class="s3">)</span>
+<span class="s1">labels2 </span><span class="s3">= </span><span class="s1">algorithm</span><span class="s3">.</span><span class="s1">labels_</span>
+<span class="s1">centroids2 </span><span class="s3">= </span><span class="s1">algorithm</span><span class="s3">.</span><span class="s1">cluster_centers_</span>
+<span class="s0">#%% 
+</span><span class="s1">h </span><span class="s3">= </span><span class="s5">0.02</span>
+<span class="s1">x_min</span><span class="s3">, </span><span class="s1">x_max </span><span class="s3">= </span><span class="s1">X2</span><span class="s3">[:, </span><span class="s5">0</span><span class="s3">].</span><span class="s1">min</span><span class="s3">() - </span><span class="s5">1</span><span class="s3">, </span><span class="s1">X2</span><span class="s3">[:, </span><span class="s5">0</span><span class="s3">].</span><span class="s1">max</span><span class="s3">() + </span><span class="s5">1</span>
+<span class="s1">y_min</span><span class="s3">, </span><span class="s1">y_max </span><span class="s3">= </span><span class="s1">X2</span><span class="s3">[:, </span><span class="s5">1</span><span class="s3">].</span><span class="s1">min</span><span class="s3">() - </span><span class="s5">1</span><span class="s3">, </span><span class="s1">X2</span><span class="s3">[:, </span><span class="s5">1</span><span class="s3">].</span><span class="s1">max</span><span class="s3">() + </span><span class="s5">1</span>
+<span class="s1">xx</span><span class="s3">, </span><span class="s1">yy </span><span class="s3">= </span><span class="s1">np</span><span class="s3">.</span><span class="s1">meshgrid</span><span class="s3">(</span><span class="s1">np</span><span class="s3">.</span><span class="s1">arange</span><span class="s3">(</span><span class="s1">x_min</span><span class="s3">, </span><span class="s1">x_max</span><span class="s3">, </span><span class="s1">h</span><span class="s3">), </span><span class="s1">np</span><span class="s3">.</span><span class="s1">arange</span><span class="s3">(</span><span class="s1">y_min</span><span class="s3">, </span><span class="s1">y_max</span><span class="s3">, </span><span class="s1">h</span><span class="s3">))</span>
+<span class="s1">Z2 </span><span class="s3">= </span><span class="s1">algorithm</span><span class="s3">.</span><span class="s1">predict</span><span class="s3">(</span><span class="s1">np</span><span class="s3">.</span><span class="s1">c_</span><span class="s3">[</span><span class="s1">xx</span><span class="s3">.</span><span class="s1">ravel</span><span class="s3">(), </span><span class="s1">yy</span><span class="s3">.</span><span class="s1">ravel</span><span class="s3">()]) </span>
+<span class="s0">#%% 
+</span><span class="s1">plt</span><span class="s3">.</span><span class="s1">figure</span><span class="s3">(</span><span class="s5">1 </span><span class="s3">, </span><span class="s1">figsize </span><span class="s3">= (</span><span class="s5">15 </span><span class="s3">, </span><span class="s5">7</span><span class="s3">) )</span>
+<span class="s1">plt</span><span class="s3">.</span><span class="s1">clf</span><span class="s3">()</span>
+<span class="s1">Z2 </span><span class="s3">= </span><span class="s1">Z2</span><span class="s3">.</span><span class="s1">reshape</span><span class="s3">(</span><span class="s1">xx</span><span class="s3">.</span><span class="s1">shape</span><span class="s3">)</span>
+<span class="s1">plt</span><span class="s3">.</span><span class="s1">imshow</span><span class="s3">(</span><span class="s1">Z2 </span><span class="s3">, </span><span class="s1">interpolation</span><span class="s3">=</span><span class="s4">'nearest'</span><span class="s3">, </span>
+           <span class="s1">extent</span><span class="s3">=(</span><span class="s1">xx</span><span class="s3">.</span><span class="s1">min</span><span class="s3">(), </span><span class="s1">xx</span><span class="s3">.</span><span class="s1">max</span><span class="s3">(), </span><span class="s1">yy</span><span class="s3">.</span><span class="s1">min</span><span class="s3">(), </span><span class="s1">yy</span><span class="s3">.</span><span class="s1">max</span><span class="s3">()),</span>
+           <span class="s1">cmap </span><span class="s3">= </span><span class="s1">plt</span><span class="s3">.</span><span class="s1">cm</span><span class="s3">.</span><span class="s1">Pastel2</span><span class="s3">, </span><span class="s1">aspect </span><span class="s3">= </span><span class="s4">'auto'</span><span class="s3">, </span><span class="s1">origin</span><span class="s3">=</span><span class="s4">'lower'</span><span class="s3">)</span>
+
+<span class="s1">plt</span><span class="s3">.</span><span class="s1">scatter</span><span class="s3">( </span><span class="s1">x </span><span class="s3">= </span><span class="s4">'Annual Income (k$)' </span><span class="s3">,</span><span class="s1">y </span><span class="s3">= </span><span class="s4">'Spending Score (1-100)' </span><span class="s3">, </span><span class="s1">data </span><span class="s3">= </span><span class="s1">df </span><span class="s3">, </span><span class="s1">c </span><span class="s3">= </span><span class="s1">labels2 </span><span class="s3">, </span>
+            <span class="s1">s </span><span class="s3">= </span><span class="s5">200 </span><span class="s3">)</span>
+<span class="s1">plt</span><span class="s3">.</span><span class="s1">scatter</span><span class="s3">(</span><span class="s1">x </span><span class="s3">= </span><span class="s1">centroids2</span><span class="s3">[: , </span><span class="s5">0</span><span class="s3">] , </span><span class="s1">y </span><span class="s3">=  </span><span class="s1">centroids2</span><span class="s3">[: , </span><span class="s5">1</span><span class="s3">] , </span><span class="s1">s </span><span class="s3">= </span><span class="s5">300 </span><span class="s3">, </span><span class="s1">c </span><span class="s3">= </span><span class="s4">'red' </span><span class="s3">, </span><span class="s1">alpha </span><span class="s3">= </span><span class="s5">0.5</span><span class="s3">)</span>
+<span class="s1">plt</span><span class="s3">.</span><span class="s1">ylabel</span><span class="s3">(</span><span class="s4">'Spending Score (1-100)'</span><span class="s3">) , </span><span class="s1">plt</span><span class="s3">.</span><span class="s1">xlabel</span><span class="s3">(</span><span class="s4">'Annual Income (k$)'</span><span class="s3">)</span>
+<span class="s1">plt</span><span class="s3">.</span><span class="s1">show</span><span class="s3">()</span>
+<span class="s0">#%% md 
+</span><span class="s1">## 3. Segmentation using Age , Annual Income and Spending Score 
+</span><span class="s0">#%% 
+</span><span class="s1">X3 </span><span class="s3">= </span><span class="s1">df</span><span class="s3">[[</span><span class="s4">'Age' </span><span class="s3">, </span><span class="s4">'Annual Income (k$)' </span><span class="s3">,</span><span class="s4">'Spending Score (1-100)'</span><span class="s3">]].</span><span class="s1">iloc</span><span class="s3">[: , :].</span><span class="s1">values</span>
+<span class="s1">inertia </span><span class="s3">= []</span>
+<span class="s2">for </span><span class="s1">n </span><span class="s2">in </span><span class="s1">range</span><span class="s3">(</span><span class="s5">1 </span><span class="s3">, </span><span class="s5">11</span><span class="s3">):</span>
+    <span class="s1">algorithm </span><span class="s3">= (</span><span class="s1">KMeans</span><span class="s3">(</span><span class="s1">n_clusters </span><span class="s3">= </span><span class="s1">n </span><span class="s3">,</span><span class="s1">init</span><span class="s3">=</span><span class="s4">'k-means++'</span><span class="s3">, </span><span class="s1">n_init </span><span class="s3">= </span><span class="s5">10 </span><span class="s3">,</span><span class="s1">max_iter</span><span class="s3">=</span><span class="s5">300</span><span class="s3">, </span>
+                        <span class="s1">tol</span><span class="s3">=</span><span class="s5">0.0001</span><span class="s3">,  </span><span class="s1">random_state</span><span class="s3">= </span><span class="s5">111  </span><span class="s3">, </span><span class="s1">algorithm</span><span class="s3">=</span><span class="s4">'elkan'</span><span class="s3">) )</span>
+    <span class="s1">algorithm</span><span class="s3">.</span><span class="s1">fit</span><span class="s3">(</span><span class="s1">X3</span><span class="s3">)</span>
+    <span class="s1">inertia</span><span class="s3">.</span><span class="s1">append</span><span class="s3">(</span><span class="s1">algorithm</span><span class="s3">.</span><span class="s1">inertia_</span><span class="s3">)</span>
+<span class="s0">#%% 
+</span><span class="s1">plt</span><span class="s3">.</span><span class="s1">figure</span><span class="s3">(</span><span class="s5">1 </span><span class="s3">, </span><span class="s1">figsize </span><span class="s3">= (</span><span class="s5">15 </span><span class="s3">,</span><span class="s5">6</span><span class="s3">))</span>
+<span class="s1">plt</span><span class="s3">.</span><span class="s1">plot</span><span class="s3">(</span><span class="s1">np</span><span class="s3">.</span><span class="s1">arange</span><span class="s3">(</span><span class="s5">1 </span><span class="s3">, </span><span class="s5">11</span><span class="s3">) , </span><span class="s1">inertia </span><span class="s3">, </span><span class="s4">'o'</span><span class="s3">)</span>
+<span class="s1">plt</span><span class="s3">.</span><span class="s1">plot</span><span class="s3">(</span><span class="s1">np</span><span class="s3">.</span><span class="s1">arange</span><span class="s3">(</span><span class="s5">1 </span><span class="s3">, </span><span class="s5">11</span><span class="s3">) , </span><span class="s1">inertia </span><span class="s3">, </span><span class="s4">'-' </span><span class="s3">, </span><span class="s1">alpha </span><span class="s3">= </span><span class="s5">0.5</span><span class="s3">)</span>
+<span class="s1">plt</span><span class="s3">.</span><span class="s1">xlabel</span><span class="s3">(</span><span class="s4">'Number of Clusters'</span><span class="s3">) , </span><span class="s1">plt</span><span class="s3">.</span><span class="s1">ylabel</span><span class="s3">(</span><span class="s4">'Inertia'</span><span class="s3">)</span>
+<span class="s1">plt</span><span class="s3">.</span><span class="s1">show</span><span class="s3">()</span>
+<span class="s0">#%% 
+</span><span class="s1">algorithm </span><span class="s3">= (</span><span class="s1">KMeans</span><span class="s3">(</span><span class="s1">n_clusters </span><span class="s3">= </span><span class="s5">6 </span><span class="s3">,</span><span class="s1">init</span><span class="s3">=</span><span class="s4">'k-means++'</span><span class="s3">, </span><span class="s1">n_init </span><span class="s3">= </span><span class="s5">10 </span><span class="s3">,</span><span class="s1">max_iter</span><span class="s3">=</span><span class="s5">300</span><span class="s3">, </span>
+                        <span class="s1">tol</span><span class="s3">=</span><span class="s5">0.0001</span><span class="s3">,  </span><span class="s1">random_state</span><span class="s3">= </span><span class="s5">111  </span><span class="s3">, </span><span class="s1">algorithm</span><span class="s3">=</span><span class="s4">'elkan'</span><span class="s3">) )</span>
+<span class="s1">algorithm</span><span class="s3">.</span><span class="s1">fit</span><span class="s3">(</span><span class="s1">X3</span><span class="s3">)</span>
+<span class="s1">labels3 </span><span class="s3">= </span><span class="s1">algorithm</span><span class="s3">.</span><span class="s1">labels_</span>
+<span class="s1">centroids3 </span><span class="s3">= </span><span class="s1">algorithm</span><span class="s3">.</span><span class="s1">cluster_centers_</span>
+<span class="s0">#%% md 
+</span><span class="s1">## 3D Plot of Clusters 
+</span><span class="s0">#%% 
+</span><span class="s1">df</span><span class="s3">[</span><span class="s4">'label3'</span><span class="s3">] =  </span><span class="s1">labels3</span>
+<span class="s1">trace1 </span><span class="s3">= </span><span class="s1">go</span><span class="s3">.</span><span class="s1">Scatter3d</span><span class="s3">(</span>
+    <span class="s1">x</span><span class="s3">= </span><span class="s1">df</span><span class="s3">[</span><span class="s4">'Age'</span><span class="s3">],</span>
+    <span class="s1">y</span><span class="s3">= </span><span class="s1">df</span><span class="s3">[</span><span class="s4">'Spending Score (1-100)'</span><span class="s3">],</span>
+    <span class="s1">z</span><span class="s3">= </span><span class="s1">df</span><span class="s3">[</span><span class="s4">'Annual Income (k$)'</span><span class="s3">],</span>
+    <span class="s1">mode</span><span class="s3">=</span><span class="s4">'markers'</span><span class="s3">,</span>
+     <span class="s1">marker</span><span class="s3">=</span><span class="s1">dict</span><span class="s3">(</span>
+        <span class="s1">color </span><span class="s3">= </span><span class="s1">df</span><span class="s3">[</span><span class="s4">'label3'</span><span class="s3">], </span>
+        <span class="s1">size</span><span class="s3">= </span><span class="s5">20</span><span class="s3">,</span>
+        <span class="s1">line</span><span class="s3">=</span><span class="s1">dict</span><span class="s3">(</span>
+            <span class="s1">color</span><span class="s3">= </span><span class="s1">df</span><span class="s3">[</span><span class="s4">'label3'</span><span class="s3">],</span>
+            <span class="s1">width</span><span class="s3">= </span><span class="s5">12</span>
+        <span class="s3">),</span>
+        <span class="s1">opacity</span><span class="s3">=</span><span class="s5">0.8</span>
+     <span class="s3">)</span>
+<span class="s3">)</span>
+<span class="s1">data </span><span class="s3">= [</span><span class="s1">trace1</span><span class="s3">]</span>
+<span class="s1">layout </span><span class="s3">= </span><span class="s1">go</span><span class="s3">.</span><span class="s1">Layout</span><span class="s3">(</span>
+<span class="s0">#     margin=dict(</span>
+<span class="s0">#         l=0,</span>
+<span class="s0">#         r=0,</span>
+<span class="s0">#         b=0,</span>
+<span class="s0">#         t=0</span>
+<span class="s0">#     )</span>
+    <span class="s1">title</span><span class="s3">= </span><span class="s4">'Clusters'</span><span class="s3">,</span>
+    <span class="s1">scene </span><span class="s3">= </span><span class="s1">dict</span><span class="s3">(</span>
+            <span class="s1">xaxis </span><span class="s3">= </span><span class="s1">dict</span><span class="s3">(</span><span class="s1">title  </span><span class="s3">= </span><span class="s4">'Age'</span><span class="s3">),</span>
+            <span class="s1">yaxis </span><span class="s3">= </span><span class="s1">dict</span><span class="s3">(</span><span class="s1">title  </span><span class="s3">= </span><span class="s4">'Spending Score'</span><span class="s3">),</span>
+            <span class="s1">zaxis </span><span class="s3">= </span><span class="s1">dict</span><span class="s3">(</span><span class="s1">title  </span><span class="s3">= </span><span class="s4">'Annual Income'</span><span class="s3">)</span>
+        <span class="s3">)</span>
+<span class="s3">)</span>
+<span class="s1">fig </span><span class="s3">= </span><span class="s1">go</span><span class="s3">.</span><span class="s1">Figure</span><span class="s3">(</span><span class="s1">data</span><span class="s3">=</span><span class="s1">data</span><span class="s3">, </span><span class="s1">layout</span><span class="s3">=</span><span class="s1">layout</span><span class="s3">)</span>
+<span class="s1">py</span><span class="s3">.</span><span class="s1">offline</span><span class="s3">.</span><span class="s1">iplot</span><span class="s3">(</span><span class="s1">fig</span><span class="s3">)</span></pre>
+</body>
+</html>
